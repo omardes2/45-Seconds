@@ -148,6 +148,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
     });
 
-    // Audit log
-    Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    // Audit log (sensitive — Super Admin / settings managers only)
+    Route::middleware('can:'.Permission::ManageSettings->value)->group(function () {
+        Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    });
 });

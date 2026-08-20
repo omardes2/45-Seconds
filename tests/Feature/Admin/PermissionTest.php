@@ -34,6 +34,12 @@ class PermissionTest extends TestCase
         $this->actingAs($staff)->get(route('admin.tracking.edit'))->assertOk();
     }
 
+    public function test_audit_log_is_restricted_to_settings_managers(): void
+    {
+        $this->actingAs($this->staff())->get(route('admin.audit-logs.index'))->assertForbidden();
+        $this->actingAs($this->superAdmin())->get(route('admin.audit-logs.index'))->assertOk();
+    }
+
     public function test_super_admin_bypasses_all_gates(): void
     {
         $admin = $this->superAdmin();

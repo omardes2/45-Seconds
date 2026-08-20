@@ -37,7 +37,7 @@
                             @can(\App\Enums\Permission::ManageUsers->value)
                                 <a href="{{ route('admin.users.index') }}" class="block rounded-xl px-3 py-2 text-sm hover:bg-slate-50">المستخدمون</a>
                             @endcan
-                            @if (Route::has('admin.audit-logs.index'))
+                            @if (Route::has('admin.audit-logs.index') && auth()->user()->can(\App\Enums\Permission::ManageSettings->value))
                                 <a href="{{ route('admin.audit-logs.index') }}" class="block rounded-xl px-3 py-2 text-sm hover:bg-slate-50">سجل النشاط</a>
                             @endif
                             @if (Route::has('admin.products.index'))
