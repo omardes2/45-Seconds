@@ -271,22 +271,7 @@
                 @break
 
             @case('final_cta')
-                <section class="bg-ink px-5 py-10 text-center text-white">
-                    <div class="text-6xl font-black text-brand-500">45<span class="text-white/30">/45</span></div>
-                    <h2 class="mt-3 text-2xl font-black">{{ $s['headline'] ?? 'انتهت الـ45 ثانية. هل تريده؟' }}</h2>
-                    @if (!empty($s['subtitle']))<p class="mt-2 text-white/70">{{ $s['subtitle'] }}</p>@endif
-                    <div class="mx-auto mt-5 max-w-[320px] rounded-2xl bg-white/10 p-4 text-right">
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-white/70">{{ $product['name'] }}</span>
-                            <span class="text-sm font-bold" x-text="current.name"></span>
-                        </div>
-                        <div class="mt-1 flex items-center justify-between">
-                            <span class="text-sm text-white/70">الإجمالي</span>
-                            <span class="text-2xl font-black text-brand-400" x-text="priceText()"></span>
-                        </div>
-                    </div>
-                    <button @click="openCheckout()" class="btn-cta mt-5 w-full max-w-[320px]">{{ $s['cta_text'] ?? 'اطلب الآن' }}</button>
-                </section>
+                {{-- Removed: the dark final-CTA block. The sticky order bar covers the final call to action. --}}
                 @break
         @endswitch
     @endforeach
