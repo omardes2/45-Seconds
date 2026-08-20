@@ -8,7 +8,7 @@
 
         {{-- ================= Live preview (center, large, sticky) ================= --}}
         <div class="mb-6 lg:order-1 lg:mb-0 lg:flex-1 lg:sticky lg:top-24">
-            <div class="mx-auto w-full max-w-[340px]">
+            <div class="mx-auto w-full" style="max-width:360px">
                 <div class="mb-2 flex items-center justify-between px-1">
                     <span class="flex items-center gap-2 text-sm font-bold text-slate-700">
                         معاينة حيّة
@@ -17,9 +17,10 @@
                     <button type="button" onclick="fsReloadPreview()"
                             class="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200">↻ تحديث</button>
                 </div>
-                <div class="overflow-hidden rounded-[2.4rem] border-8 border-slate-900 bg-black shadow-2xl">
+                <div class="overflow-hidden border-8 border-slate-900 bg-black shadow-2xl" style="border-radius:2.4rem">
                     <iframe id="builder-preview" src="{{ route('admin.pages.preview', $page) }}"
-                            class="h-[78vh] max-h-[760px] min-h-[560px] w-full bg-white" title="معاينة"></iframe>
+                            class="w-full bg-white" style="height:78vh;min-height:600px;max-height:800px;display:block"
+                            title="معاينة"></iframe>
                 </div>
             </div>
         </div>
