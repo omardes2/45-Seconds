@@ -1,4 +1,4 @@
-<x-layouts.admin title="تعديل المنتج" heading="تعديل المنتج">
+<x-layouts.admin title="تعديل المنتج" heading="تعديل المنتج" :narrow="true">
     <x-slot:actions>
         @if ($product->landingPages()->exists())
             <a href="{{ route('admin.pages.index') }}" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-600">الصفحات ({{ $product->landingPages()->count() }})</a>

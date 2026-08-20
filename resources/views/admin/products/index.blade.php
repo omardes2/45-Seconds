@@ -1,4 +1,4 @@
-<x-layouts.admin title="المنتجات" heading="المنتجات">
+<x-layouts.admin title="المنتجات" heading="المنتجات" :narrow="true">
     <x-slot:actions>
         <a href="{{ route('admin.products.create') }}" class="btn-brand !px-3 !py-2 text-sm">＋ منتج</a>
     </x-slot:actions>

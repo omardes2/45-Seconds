@@ -1,4 +1,4 @@
-<x-layouts.admin title="منتج جديد" heading="منتج جديد">
+<x-layouts.admin title="منتج جديد" heading="منتج جديد" :narrow="true">
     <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data" class="space-y-4">
         @csrf
         @include('admin.products._form', ['product' => null])

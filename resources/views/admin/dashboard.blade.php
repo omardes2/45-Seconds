@@ -1,6 +1,6 @@
 <x-layouts.admin title="الرئيسية" heading="مرحبًا 👋">
     @php($c = $summary['currency'] ?? 'ILS')
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <x-stat-card label="طلبات اليوم" :value="number_format($summary['orders_today'])" tone="brand" />
         <x-stat-card label="مبيعات اليوم" :value="money($summary['revenue_today'], $c)" tone="green" />
         <x-stat-card label="زيارات اليوم" :value="number_format($summary['visitors_today'])" tone="slate" />
@@ -20,8 +20,9 @@
         </a>
     @endif
 
+    <div class="mt-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
     {{-- Recent orders --}}
-    <div class="mt-6">
+    <div>
         <div class="mb-2 flex items-center justify-between">
             <h2 class="text-base font-bold text-slate-900">آخر الطلبات</h2>
             @if (Route::has('admin.orders.index'))
@@ -46,7 +47,7 @@
 
     {{-- Top pages --}}
     @if (! empty($summary['top_pages']))
-        <div class="mt-6">
+        <div class="mt-6 lg:mt-0">
             <h2 class="mb-2 text-base font-bold text-slate-900">أفضل الصفحات</h2>
             @foreach ($summary['top_pages'] as $page)
                 <div class="card mb-2 flex items-center justify-between p-3">
@@ -56,4 +57,5 @@
             @endforeach
         </div>
     @endif
+    </div>
 </x-layouts.admin>

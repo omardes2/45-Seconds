@@ -3,8 +3,9 @@
         <a href="{{ route('admin.pages.create') }}" class="btn-brand !px-3 !py-2 text-sm">＋ صفحة</a>
     </x-slot:actions>
 
+    <div class="lg:grid lg:grid-cols-2 lg:gap-4">
     @forelse ($pages as $page)
-        <div class="card mb-3 p-4">
+        <div class="card mb-3 p-4 lg:mb-0">
             <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
                     <div class="truncate text-sm font-bold text-slate-900">{{ $page->name }}</div>
@@ -46,10 +47,13 @@
             </div>
         </div>
     @empty
-        <x-empty-state title="لا توجد صفحات بيع" subtitle="أنشئ صفحتك الأولى بأسلوب 45 ثانية.">
-            <a href="{{ route('admin.pages.create') }}" class="btn-brand">＋ صفحة جديدة</a>
-        </x-empty-state>
+        <div class="lg:col-span-2">
+            <x-empty-state title="لا توجد صفحات بيع" subtitle="أنشئ صفحتك الأولى بأسلوب 45 ثانية.">
+                <a href="{{ route('admin.pages.create') }}" class="btn-brand">＋ صفحة جديدة</a>
+            </x-empty-state>
+        </div>
     @endforelse
+    </div>
 
     <div class="mt-4">{{ $pages->links() }}</div>
 </x-layouts.admin>

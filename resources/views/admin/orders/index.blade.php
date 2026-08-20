@@ -32,8 +32,9 @@
         </div>
     </form>
 
+    <div class="lg:grid lg:grid-cols-2 lg:gap-3">
     @forelse ($orders as $order)
-        <a href="{{ route('admin.orders.show', $order) }}" class="card mb-2 block p-4">
+        <a href="{{ route('admin.orders.show', $order) }}" class="card mb-2 block p-4 lg:mb-0">
             <div class="flex items-start justify-between">
                 <div>
                     <div class="text-sm font-bold text-slate-900">#{{ $order->order_number }} — {{ $order->full_name }}</div>
@@ -47,8 +48,11 @@
             </div>
         </a>
     @empty
-        <x-empty-state title="لا توجد طلبات" subtitle="ستظهر الطلبات هنا فور وصولها." />
+        <div class="lg:col-span-2">
+            <x-empty-state title="لا توجد طلبات" subtitle="ستظهر الطلبات هنا فور وصولها." />
+        </div>
     @endforelse
+    </div>
 
     <div class="mt-4">{{ $orders->links() }}</div>
 </x-layouts.admin>
