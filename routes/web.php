@@ -3,10 +3,13 @@
 use App\Enums\Permission;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\LandingPageController;
+use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\TrackingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -94,6 +97,27 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::get('pages/{page}/sections/{section}/edit', [PageSectionController::class, 'edit'])->name('pages.sections.edit');
         Route::put('pages/{page}/sections/{section}', [PageSectionController::class, 'update'])->name('pages.sections.update');
         Route::post('pages/{page}/sections/{section}/toggle', [PageSectionController::class, 'toggle'])->name('pages.sections.toggle');
+
+        // Offers
+        Route::get('pages/{page}/offers', [OfferController::class, 'index'])->name('pages.offers.index');
+        Route::post('pages/{page}/offers', [OfferController::class, 'store'])->name('pages.offers.store');
+        Route::get('pages/{page}/offers/{offer}/edit', [OfferController::class, 'edit'])->name('pages.offers.edit');
+        Route::put('pages/{page}/offers/{offer}', [OfferController::class, 'update'])->name('pages.offers.update');
+        Route::delete('pages/{page}/offers/{offer}', [OfferController::class, 'destroy'])->name('pages.offers.destroy');
+
+        // Testimonials
+        Route::get('pages/{page}/testimonials', [TestimonialController::class, 'index'])->name('pages.testimonials.index');
+        Route::post('pages/{page}/testimonials', [TestimonialController::class, 'store'])->name('pages.testimonials.store');
+        Route::get('pages/{page}/testimonials/{testimonial}/edit', [TestimonialController::class, 'edit'])->name('pages.testimonials.edit');
+        Route::put('pages/{page}/testimonials/{testimonial}', [TestimonialController::class, 'update'])->name('pages.testimonials.update');
+        Route::delete('pages/{page}/testimonials/{testimonial}', [TestimonialController::class, 'destroy'])->name('pages.testimonials.destroy');
+
+        // FAQs
+        Route::get('pages/{page}/faqs', [FaqController::class, 'index'])->name('pages.faqs.index');
+        Route::post('pages/{page}/faqs', [FaqController::class, 'store'])->name('pages.faqs.store');
+        Route::get('pages/{page}/faqs/{faq}/edit', [FaqController::class, 'edit'])->name('pages.faqs.edit');
+        Route::put('pages/{page}/faqs/{faq}', [FaqController::class, 'update'])->name('pages.faqs.update');
+        Route::delete('pages/{page}/faqs/{faq}', [FaqController::class, 'destroy'])->name('pages.faqs.destroy');
     });
 
     // Audit log
