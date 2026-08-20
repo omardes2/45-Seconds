@@ -29,6 +29,9 @@
     @if ($seo['og_image'])<meta property="og:image" content="{{ \Illuminate\Support\Str::startsWith($seo['og_image'], 'http') ? $seo['og_image'] : url($seo['og_image']) }}">@endif
     <meta name="theme-color" content="#0b1020">
     @if ($preview ?? false)<meta name="robots" content="noindex">@endif
+    @unless ($preview ?? false)
+        @include('public.partials.tracking')
+    @endunless
     @stack('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -382,9 +385,21 @@
             });
         } catch (e) {}
     }
-    window.addEventListener('DOMContentLoaded', function () { send('view_content'); });
+    var pixelData = {
+        content_ids: [@js((string) ($data['product']['id'] ?? ''))],
+        content_name: @js($data['product']['name'] ?? ''),
+        content_type: 'product',
+        currency: @js($data['currency'] ?? 'ILS'),
+    };
+    window.addEventListener('DOMContentLoaded', function () {
+        send('view_content');
+        if (window.fsTrack) fsTrack('ViewContent', pixelData);
+    });
     window.addEventListener('fs:offer-selected', function (e) { send('offer_selected', e.detail); });
-    window.addEventListener('fs:checkout-opened', function () { send('checkout_opened'); });
+    window.addEventListener('fs:checkout-opened', function () {
+        send('checkout_opened');
+        if (window.fsTrack) fsTrack('InitiateCheckout', pixelData);
+    });
     window.addEventListener('fs:demo-interaction', function () { send('demo_interaction'); });
 })();
 </script>

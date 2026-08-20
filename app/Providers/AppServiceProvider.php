@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\Permission as PermissionEnum;
 use App\Events\OrderCreated;
+use App\Listeners\QueueServerConversion;
 use App\Listeners\RecordOrderCreatedTrackingEvent;
 use App\Models\Role;
 use App\Models\User;
@@ -40,6 +41,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Event::listen(OrderCreated::class, RecordOrderCreatedTrackingEvent::class);
+        Event::listen(OrderCreated::class, QueueServerConversion::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
 

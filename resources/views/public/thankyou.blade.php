@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>تم استلام طلبك</title>
     <meta name="robots" content="noindex">
+    @include('public.partials.tracking')
     @stack('head')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -31,6 +32,22 @@
 
         <a href="{{ route('public.show', $page->slug) }}" class="btn-brand mt-6 w-full max-w-[340px]">العودة للصفحة</a>
     </div>
+    <script>
+        // Purchase fires only here — i.e. only after the order was created
+        // server-side. eventID matches the CAPI event for deduplication.
+        window.addEventListener('DOMContentLoaded', function () {
+            if (window.fsTrack) {
+                fsTrack('Purchase', {
+                    content_ids: [@js((string) $order->product_id)],
+                    content_name: @js($order->product->name),
+                    content_type: 'product',
+                    value: {{ (float) $order->total }},
+                    currency: @js($order->currency->value),
+                    num_items: {{ (int) $order->quantity }},
+                }, @js('order_'.$order->id));
+            }
+        });
+    </script>
     @stack('body')
 </body>
 </html>

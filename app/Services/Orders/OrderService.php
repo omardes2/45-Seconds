@@ -42,7 +42,7 @@ class OrderService
         $total = round((float) $offer->price, 2);
         $unitPrice = round($total / $quantity, 2);
 
-        return DB::transaction(function () use ($page, $offer, $customer, $meta, $attribution, $currency, $quantity, $unitPrice, $total) {
+        $order = DB::transaction(function () use ($page, $offer, $customer, $meta, $attribution, $currency, $quantity, $unitPrice, $total) {
             $order = Order::create([
                 'order_number' => 'PENDING', // replaced below using the id
                 'landing_page_id' => $page->id,
@@ -92,10 +92,13 @@ class OrderService
                 'referrer' => $attribution['referrer'] ?? null,
             ]);
 
-            OrderCreated::dispatch($order->fresh(['attribution']));
-
             return $order;
         });
+
+        // Dispatch AFTER commit so queued listeners (CAPI) enqueue correctly.
+        OrderCreated::dispatch($order->fresh(['attribution', 'product']));
+
+        return $order;
     }
 
     /**
