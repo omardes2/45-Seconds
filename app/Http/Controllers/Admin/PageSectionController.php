@@ -148,6 +148,11 @@ class PageSectionController extends Controller
                 'cta_text' => ['nullable', 'string', 'max:60'],
                 'is_enabled' => ['nullable', 'boolean'],
             ],
+            SectionType::Testimonials, SectionType::Offers => [
+                'title' => ['nullable', 'string', 'max:160'],
+                'subtitle' => ['nullable', 'string', 'max:255'],
+                'is_enabled' => ['nullable', 'boolean'],
+            ],
             default => ['is_enabled' => ['nullable', 'boolean']],
         };
     }
