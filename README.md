@@ -1,58 +1,125 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 45 Seconds
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**45 Seconds** is a platform for building **single-product, mobile-only sales
+pages** for Facebook / Instagram / TikTok ad traffic. Each visitor moves through
+a short, visually structured 45-second buying journey:
 
-## About Laravel
+`0s Hook → 5s Problem → 12s Demo → 20s Benefits → 27s Social Proof → 33s Offers → 38s Trust/FAQ → 45s Final CTA / Checkout`
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+No cart, no catalog, no desktop storefront — just **Ad → Landing Page → Offer →
+Order**. The admin panel and the public pages are **mobile-first** and the
+interface is **Arabic / RTL** by default.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+> Full design notes live in [`docs/`](docs): architecture, database, tracking,
+> order flow, security, decisions, roadmap.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
 
-## Learning Laravel
+- PHP **8.3+** (with `pdo`, `mbstring`, `gd`, `openssl`)
+- Composer 2
+- Node.js 20+ / npm
+- **MySQL 8** for production (or SQLite for a quick local run)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Installation
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repo> 45-seconds && cd 45-seconds
+composer install
+cp .env.example .env
+php artisan key:generate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Database — MySQL 8 (production target)
 
-## Contributing
+Create a database and set credentials in `.env`:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```dotenv
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=forty_five_seconds
+DB_USERNAME=root
+DB_PASSWORD=secret
+```
 
-## Code of Conduct
+```sql
+CREATE DATABASE forty_five_seconds CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Database — SQLite (quick local / tests)
 
-## Security Vulnerabilities
+```dotenv
+DB_CONNECTION=sqlite
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+touch database/database.sqlite   # DB_DATABASE can stay default
+```
 
-## License
+### Migrate & seed
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan migrate --seed
+php artisan storage:link
+```
+
+The seed creates users, roles/permissions, default settings, and a complete
+**"Sleep Light"** demo product + published landing page (all sections, 3 offers,
+testimonials, trust items, FAQ) so you can see the full experience immediately.
+
+### Build the frontend
+
+```bash
+npm install
+npm run build      # or: npm run dev
+```
+
+### Run
+
+```bash
+php artisan serve
+```
+
+- Admin panel: <http://localhost:8000/> → `/login`
+- Demo landing page: <http://localhost:8000/p/sleep-light>
+
+## Demo credentials
+
+| Role        | Email                     | Password   |
+|-------------|---------------------------|------------|
+| Super Admin | `admin@45seconds.test`    | `password` |
+| Staff       | `staff@45seconds.test`    | `password` |
+
+> Change these before any real deployment.
+
+## Tests
+
+```bash
+php artisan test
+```
+
+The suite (PHPUnit, in-memory SQLite) covers auth, permissions, products,
+landing pages & publishing, offers/content, **server-side pricing &
+price-tampering**, order validation & status transitions, tracking &
+attribution, pixel settings, analytics, public access and draft protection,
+and rate limiting.
+
+## Formatting
+
+```bash
+./vendor/bin/pint
+```
+
+## Configuration
+
+- **Tracking** (Meta / TikTok pixel ids + optional Conversions API tokens) is
+  configured in the admin panel under **Settings → Tracking** — never in code.
+  Tokens are encrypted at rest. See [`docs/TRACKING.md`](docs/TRACKING.md).
+- App-level knobs (currency default, order-number format, checkout rate limit,
+  visitor cookie) live in `config/fortyfive.php`.
+
+## Notes
+
+- MVP payment is **cash on delivery** only.
+- For production, run a queue worker (`php artisan queue:work`) so server-side
+  conversion jobs process off-request, and serve over HTTPS.
