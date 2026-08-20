@@ -3,6 +3,8 @@
 use App\Enums\Permission;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LandingPageController;
+use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TrackingController;
@@ -10,6 +12,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,6 +37,13 @@ Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 Route::get('/', fn () => redirect()->route('admin.dashboard'));
+
+/*
+|--------------------------------------------------------------------------
+| Public landing pages (mobile-only 45 Seconds experience)
+|--------------------------------------------------------------------------
+*/
+Route::get('/p/{slug}', [PublicPageController::class, 'show'])->name('public.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -65,6 +75,25 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::resource('products', ProductController::class)->except('show');
         Route::delete('products/{product}/media/{media}', [ProductController::class, 'destroyMedia'])
             ->name('products.media.destroy');
+    });
+
+    // Landing pages & page builder
+    Route::middleware('can:'.Permission::ManagePages->value)->group(function () {
+        Route::get('pages', [LandingPageController::class, 'index'])->name('pages.index');
+        Route::get('pages/create', [LandingPageController::class, 'create'])->name('pages.create');
+        Route::post('pages', [LandingPageController::class, 'store'])->name('pages.store');
+        Route::get('pages/{page}/builder', [LandingPageController::class, 'builder'])->name('pages.builder');
+        Route::get('pages/{page}/meta', [LandingPageController::class, 'editMeta'])->name('pages.meta');
+        Route::put('pages/{page}/meta', [LandingPageController::class, 'updateMeta'])->name('pages.meta.update');
+        Route::get('pages/{page}/preview', [LandingPageController::class, 'preview'])->name('pages.preview');
+        Route::post('pages/{page}/publish', [LandingPageController::class, 'publish'])->name('pages.publish');
+        Route::post('pages/{page}/pause', [LandingPageController::class, 'pause'])->name('pages.pause');
+        Route::delete('pages/{page}', [LandingPageController::class, 'archive'])->name('pages.archive');
+
+        // Section editors (hero / problem / demo / benefits / trust / final_cta)
+        Route::get('pages/{page}/sections/{section}/edit', [PageSectionController::class, 'edit'])->name('pages.sections.edit');
+        Route::put('pages/{page}/sections/{section}', [PageSectionController::class, 'update'])->name('pages.sections.update');
+        Route::post('pages/{page}/sections/{section}/toggle', [PageSectionController::class, 'toggle'])->name('pages.sections.toggle');
     });
 
     // Audit log
