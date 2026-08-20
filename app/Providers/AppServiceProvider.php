@@ -3,11 +3,14 @@
 namespace App\Providers;
 
 use App\Enums\Permission as PermissionEnum;
+use App\Events\OrderCreated;
+use App\Listeners\RecordOrderCreatedTrackingEvent;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\SettingsRepository;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
@@ -35,6 +38,8 @@ class AppServiceProvider extends ServiceProvider
                 return $user->hasPermissionTo($permission);
             });
         }
+
+        Event::listen(OrderCreated::class, RecordOrderCreatedTrackingEvent::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
 

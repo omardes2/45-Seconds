@@ -31,10 +31,10 @@ class PublicOrderController extends Controller
             meta: [
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
                 'ip_address' => $request->ip(),
-                // visitor_id / session_id are attached by the tracking layer (Sprint 6).
                 'visitor_id' => $request->attributes->get('fs_visitor_id'),
                 'session_id' => $request->attributes->get('fs_session_id'),
             ],
+            attribution: (array) $request->attributes->get('fs_attribution', []),
         );
 
         return redirect()

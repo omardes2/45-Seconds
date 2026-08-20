@@ -142,6 +142,7 @@
                                     <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 grid h-9 w-9 place-items-center rounded-full bg-white shadow-lg text-brand-600" style="right:0">⇄</div>
                                 </div>
                                 <input type="range" min="0" max="100" x-model="pos"
+                                       @change.once="window.dispatchEvent(new CustomEvent('fs:demo-interaction'))"
                                        class="absolute inset-0 h-full w-full cursor-ew-resize opacity-0" aria-label="مقارنة قبل وبعد">
                             </div>
                         @elseif ($s['demo_type'] === 'video' && !empty($s['video_url']))
@@ -367,6 +368,27 @@
         </div>
     </div>
 </div>
+@unless ($preview ?? false)
+<script>
+(function () {
+    var pageId = {{ (int) ($data['page']['id'] ?? 0) }};
+    var url = @js(route('track.event'));
+    function send(type, meta) {
+        try {
+            fetch(url, {
+                method: 'POST', keepalive: true,
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ type: type, page_id: pageId, metadata: meta || {} }),
+            });
+        } catch (e) {}
+    }
+    window.addEventListener('DOMContentLoaded', function () { send('view_content'); });
+    window.addEventListener('fs:offer-selected', function (e) { send('offer_selected', e.detail); });
+    window.addEventListener('fs:checkout-opened', function () { send('checkout_opened'); });
+    window.addEventListener('fs:demo-interaction', function () { send('demo_interaction'); });
+})();
+</script>
+@endunless
 @stack('body')
 </body>
 </html>

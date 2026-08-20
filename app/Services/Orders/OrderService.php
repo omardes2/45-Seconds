@@ -25,8 +25,9 @@ class OrderService
      *
      * @param  array<string, mixed>  $customer  full_name, phone, city, area, address, notes
      * @param  array<string, mixed>  $meta  visitor_id, session_id, user_agent, ip_address
+     * @param  array<string, mixed>  $attribution  UTM / click ids / referrer snapshot
      */
-    public function create(LandingPage $page, Offer $offer, array $customer, array $meta = []): Order
+    public function create(LandingPage $page, Offer $offer, array $customer, array $meta = [], array $attribution = []): Order
     {
         // Defensive re-check: the offer must belong to this page and be active.
         if ($offer->landing_page_id !== $page->id || ! $offer->is_active) {
@@ -41,7 +42,7 @@ class OrderService
         $total = round((float) $offer->price, 2);
         $unitPrice = round($total / $quantity, 2);
 
-        return DB::transaction(function () use ($page, $offer, $customer, $meta, $currency, $quantity, $unitPrice, $total) {
+        return DB::transaction(function () use ($page, $offer, $customer, $meta, $attribution, $currency, $quantity, $unitPrice, $total) {
             $order = Order::create([
                 'order_number' => 'PENDING', // replaced below using the id
                 'landing_page_id' => $page->id,
@@ -73,6 +74,22 @@ class OrderService
                 'to_status' => OrderStatus::New,
                 'user_id' => null,
                 'note' => 'تم إنشاء الطلب',
+            ]);
+
+            // Snapshot the marketing attribution at order time so it survives
+            // even after the visitor's session data is gone.
+            $order->attribution()->create([
+                'landing_page_id' => $page->id,
+                'visitor_id' => $attribution['visitor_id'] ?? ($meta['visitor_id'] ?? null),
+                'session_id' => $attribution['session_id'] ?? ($meta['session_id'] ?? null),
+                'utm_source' => $attribution['utm_source'] ?? null,
+                'utm_medium' => $attribution['utm_medium'] ?? null,
+                'utm_campaign' => $attribution['utm_campaign'] ?? null,
+                'utm_content' => $attribution['utm_content'] ?? null,
+                'utm_term' => $attribution['utm_term'] ?? null,
+                'fbclid' => $attribution['fbclid'] ?? null,
+                'ttclid' => $attribution['ttclid'] ?? null,
+                'referrer' => $attribution['referrer'] ?? null,
             ]);
 
             OrderCreated::dispatch($order->fresh(['attribution']));

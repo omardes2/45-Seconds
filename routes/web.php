@@ -18,6 +18,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\PublicOrderController;
 use App\Http\Controllers\PublicPageController;
+use App\Http\Controllers\TrackingEventController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,11 +49,18 @@ Route::get('/', fn () => redirect()->route('admin.dashboard'));
 | Public landing pages (mobile-only 45 Seconds experience)
 |--------------------------------------------------------------------------
 */
-Route::get('/p/{slug}', [PublicPageController::class, 'show'])->name('public.show');
-Route::post('/p/{page:slug}/order', [PublicOrderController::class, 'store'])
-    ->middleware('throttle:checkout')
-    ->name('public.order.store');
-Route::get('/p/{page:slug}/thank-you', [PublicOrderController::class, 'thankyou'])->name('public.thankyou');
+Route::middleware('track')->group(function () {
+    Route::get('/p/{slug}', [PublicPageController::class, 'show'])->name('public.show');
+    Route::post('/p/{page:slug}/order', [PublicOrderController::class, 'store'])
+        ->middleware('throttle:checkout')
+        ->name('public.order.store');
+    Route::get('/p/{page:slug}/thank-you', [PublicOrderController::class, 'thankyou'])->name('public.thankyou');
+});
+
+// Client-side funnel events (view_content, demo_interaction, offer_selected, checkout_opened).
+Route::post('/t/event', [TrackingEventController::class, 'store'])
+    ->middleware(['track', 'throttle:60,1'])
+    ->name('track.event');
 
 /*
 |--------------------------------------------------------------------------
