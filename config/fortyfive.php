@@ -17,9 +17,10 @@ return [
     | Human-readable order numbers are generated as {prefix}{seq} where seq is
     | a zero-padded incrementing counter starting at `start`. e.g. 450001.
     */
+    // order_number = {prefix}{str_pad(order_id + start, pad)} → e.g. 45 + 0001.
     'order_number' => [
         'prefix' => env('FORTYFIVE_ORDER_PREFIX', '45'),
-        'start' => 10000,
+        'start' => 0,
         'pad' => 4,
     ],
 

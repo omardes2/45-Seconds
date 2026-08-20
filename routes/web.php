@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\LandingPageController;
 use App\Http\Controllers\Admin\OfferController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageSectionController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SettingController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\PublicOrderController;
 use App\Http\Controllers\PublicPageController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +49,10 @@ Route::get('/', fn () => redirect()->route('admin.dashboard'));
 |--------------------------------------------------------------------------
 */
 Route::get('/p/{slug}', [PublicPageController::class, 'show'])->name('public.show');
+Route::post('/p/{page:slug}/order', [PublicOrderController::class, 'store'])
+    ->middleware('throttle:checkout')
+    ->name('public.order.store');
+Route::get('/p/{page:slug}/thank-you', [PublicOrderController::class, 'thankyou'])->name('public.thankyou');
 
 /*
 |--------------------------------------------------------------------------
@@ -118,6 +124,14 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::get('pages/{page}/faqs/{faq}/edit', [FaqController::class, 'edit'])->name('pages.faqs.edit');
         Route::put('pages/{page}/faqs/{faq}', [FaqController::class, 'update'])->name('pages.faqs.update');
         Route::delete('pages/{page}/faqs/{faq}', [FaqController::class, 'destroy'])->name('pages.faqs.destroy');
+    });
+
+    // Orders
+    Route::middleware('can:'.Permission::ManageOrders->value)->group(function () {
+        Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+        Route::post('orders/{order}/notes', [OrderController::class, 'addNote'])->name('orders.notes');
     });
 
     // Audit log
