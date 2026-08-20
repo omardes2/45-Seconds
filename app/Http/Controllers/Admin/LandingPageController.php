@@ -134,4 +134,14 @@ class LandingPageController extends Controller
 
         return redirect()->route('admin.pages.index')->with('success', 'تم أرشفة الصفحة.');
     }
+
+    public function destroy(LandingPage $page): RedirectResponse
+    {
+        $name = $page->name;
+        $page->delete();
+
+        $this->audit->log(AuditAction::Deleted, $page, ['name' => $name]);
+
+        return redirect()->route('admin.pages.index')->with('success', 'تم حذف الصفحة.');
+    }
 }

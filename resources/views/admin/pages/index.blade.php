@@ -44,6 +44,13 @@
                         <button class="w-full rounded-xl bg-amber-500 py-2 text-xs font-bold text-white">إيقاف</button>
                     </form>
                 @endif
+
+                <form method="POST" action="{{ route('admin.pages.destroy', $page) }}"
+                      onsubmit="return confirm('حذف صفحة «{{ $page->name }}» نهائيًا؟')">
+                    @csrf @method('DELETE')
+                    <button type="submit" title="حذف الصفحة"
+                            class="grid h-full min-h-[36px] w-10 place-items-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100">🗑</button>
+                </form>
             </div>
         </div>
     @empty

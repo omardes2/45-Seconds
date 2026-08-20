@@ -107,6 +107,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::post('pages/{page}/publish', [LandingPageController::class, 'publish'])->name('pages.publish');
         Route::post('pages/{page}/pause', [LandingPageController::class, 'pause'])->name('pages.pause');
         Route::delete('pages/{page}', [LandingPageController::class, 'archive'])->name('pages.archive');
+        Route::delete('pages/{page}/delete', [LandingPageController::class, 'destroy'])->name('pages.destroy');
 
         // Section editors (hero / problem / demo / benefits / trust / final_cta)
         Route::get('pages/{page}/sections/{section}/edit', [PageSectionController::class, 'edit'])->name('pages.sections.edit');
