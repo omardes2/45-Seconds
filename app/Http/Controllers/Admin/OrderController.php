@@ -94,4 +94,11 @@ class OrderController extends Controller
 
         return back()->with('success', 'تمت إضافة الملاحظة.');
     }
+
+    public function destroy(Order $order): RedirectResponse
+    {
+        $order->delete();
+
+        return redirect()->route('admin.orders.index')->with('success', 'تم حذف الطلب.');
+    }
 }

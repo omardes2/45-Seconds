@@ -34,19 +34,28 @@
 
     <div class="lg:grid lg:grid-cols-2 lg:gap-3">
     @forelse ($orders as $order)
-        <a href="{{ route('admin.orders.show', $order) }}" class="card mb-2 block p-4 lg:mb-0">
-            <div class="flex items-start justify-between">
-                <div>
-                    <div class="text-sm font-bold text-slate-900">#{{ $order->order_number }} — {{ $order->full_name }}</div>
-                    <div class="text-xs text-slate-400" dir="ltr">{{ $order->phone }}</div>
-                    <div class="mt-0.5 text-[11px] text-slate-400">{{ $order->landingPage?->name }} · {{ $order->created_at->diffForHumans() }}</div>
+        <div class="relative mb-2 lg:mb-0">
+            <a href="{{ route('admin.orders.show', $order) }}" class="card block p-4">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="text-sm font-bold text-slate-900">#{{ $order->order_number }} — {{ $order->full_name }}</div>
+                        <div class="text-xs text-slate-400" dir="ltr">{{ $order->phone }}</div>
+                        <div class="mt-0.5 text-[11px] text-slate-400">{{ $order->landingPage?->name }} · {{ $order->created_at->diffForHumans() }}</div>
+                    </div>
+                    <div class="text-left">
+                        <div class="text-sm font-black text-slate-900">{{ money($order->total, $order->currency) }}</div>
+                        <x-badge :color="$order->status->color()" :label="$order->status->label()" class="mt-1" />
+                    </div>
                 </div>
-                <div class="text-left">
-                    <div class="text-sm font-black text-slate-900">{{ money($order->total, $order->currency) }}</div>
-                    <x-badge :color="$order->status->color()" :label="$order->status->label()" class="mt-1" />
-                </div>
-            </div>
-        </a>
+            </a>
+            <form method="POST" action="{{ route('admin.orders.destroy', $order) }}"
+                  class="absolute bottom-2 left-2"
+                  onsubmit="return confirm('حذف الطلب #{{ $order->order_number }} نهائيًا؟')">
+                @csrf @method('DELETE')
+                <button type="submit" title="حذف الطلب"
+                        class="grid h-8 w-8 place-items-center rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-100">🗑</button>
+            </form>
+        </div>
     @empty
         <div class="lg:col-span-2">
             <x-empty-state title="لا توجد طلبات" subtitle="ستظهر الطلبات هنا فور وصولها." />
