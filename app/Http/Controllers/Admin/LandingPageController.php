@@ -7,6 +7,7 @@ use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\LandingPage;
 use App\Models\Product;
+use App\Services\Analytics\AnalyticsService;
 use App\Services\AuditLogger;
 use App\Services\Pages\PageBuilder;
 use App\Services\Pages\PagePublisher;
@@ -25,14 +26,17 @@ class LandingPageController extends Controller
         private readonly AuditLogger $audit,
     ) {}
 
-    public function index(): View
+    public function index(AnalyticsService $analytics): View
     {
         $pages = LandingPage::with('product')
             ->withCount('orders')
             ->latest()
             ->paginate(15);
 
-        return view('admin.pages.index', compact('pages'));
+        // Keyed all-time stats for the visible pages.
+        $stats = collect($analytics->pageBreakdown())->keyBy('id');
+
+        return view('admin.pages.index', compact('pages', 'stats'));
     }
 
     public function create(): View

@@ -13,17 +13,18 @@
                 <x-badge :color="$page->status->color()" :label="$page->status->label()" />
             </div>
 
+            @php($st = $stats[$page->id] ?? null)
             <div class="mt-3 grid grid-cols-3 gap-2 text-center">
                 <div class="rounded-xl bg-slate-50 py-2">
                     <div class="text-sm font-black text-slate-900">{{ number_format($page->orders_count) }}</div>
                     <div class="text-[10px] text-slate-400">طلبات</div>
                 </div>
                 <div class="rounded-xl bg-slate-50 py-2">
-                    <div class="text-sm font-black text-slate-900">{{ number_format($page->analyticsSessions ?? 0) }}</div>
+                    <div class="text-sm font-black text-slate-900">{{ number_format($st['sessions'] ?? 0) }}</div>
                     <div class="text-[10px] text-slate-400">زيارات</div>
                 </div>
                 <div class="rounded-xl bg-slate-50 py-2">
-                    <div class="text-sm font-black text-slate-900">{{ $page->conversionRate ?? '0' }}%</div>
+                    <div class="text-sm font-black text-slate-900">{{ $st['conversion_rate'] ?? '0' }}%</div>
                     <div class="text-[10px] text-slate-400">تحويل</div>
                 </div>
             </div>

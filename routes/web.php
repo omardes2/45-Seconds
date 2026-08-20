@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Permission;
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController;
@@ -140,6 +141,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::put('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
         Route::post('orders/{order}/notes', [OrderController::class, 'addNote'])->name('orders.notes');
+    });
+
+    // Analytics
+    Route::middleware('can:'.Permission::ViewAnalytics->value)->group(function () {
+        Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
     });
 
     // Audit log

@@ -151,4 +151,134 @@ class AnalyticsService
             ])
             ->all();
     }
+
+    /**
+     * Full analytics report for an (optional) date range: overall totals plus a
+     * per-landing-page breakdown.
+     *
+     * @return array<string, mixed>
+     */
+    public function report(?Carbon $from = null, ?Carbon $to = null): array
+    {
+        return [
+            'currency' => config('fortyfive.default_currency', 'ILS'),
+            'totals' => [
+                'visitors' => $this->rangeVisitors($from, $to),
+                'sessions' => $this->rangeSessions($from, $to),
+                'orders' => $this->rangeOrders($from, $to),
+                'revenue' => $this->rangeRevenue($from, $to),
+                'conversion_rate' => $this->ratio($this->rangeOrders($from, $to), $this->rangeSessions($from, $to)),
+                'aov' => $this->rangeAov($from, $to),
+            ],
+            'pages' => $this->pageBreakdown($from, $to),
+        ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function pageBreakdown(?Carbon $from = null, ?Carbon $to = null): array
+    {
+        if (! Schema::hasTable('landing_pages')) {
+            return [];
+        }
+
+        return DB::table('landing_pages')
+            ->orderByDesc('id')
+            ->get(['id', 'name', 'slug'])
+            ->map(function ($page) use ($from, $to) {
+                $sessions = $this->rangeSessions($from, $to, $page->id);
+                $orders = $this->rangeOrders($from, $to, $page->id);
+
+                return [
+                    'id' => $page->id,
+                    'name' => $page->name,
+                    'slug' => $page->slug,
+                    'visitors' => $this->rangeVisitors($from, $to, $page->id),
+                    'sessions' => $sessions,
+                    'orders' => $orders,
+                    'revenue' => $this->rangeRevenue($from, $to, $page->id),
+                    'conversion_rate' => $this->ratio($orders, $sessions),
+                    'aov' => $this->rangeAov($from, $to, $page->id),
+                ];
+            })
+            ->all();
+    }
+
+    private function rangeVisitors(?Carbon $from, ?Carbon $to, ?int $pageId = null): int
+    {
+        if (! Schema::hasTable('visits')) {
+            return 0;
+        }
+
+        return DB::table('visits')
+            ->when($pageId, fn ($q) => $q->where('landing_page_id', $pageId))
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to->copy()->endOfDay()))
+            ->distinct('visitor_id')
+            ->count('visitor_id');
+    }
+
+    private function rangeSessions(?Carbon $from, ?Carbon $to, ?int $pageId = null): int
+    {
+        if (! Schema::hasTable('visits')) {
+            return 0;
+        }
+
+        return DB::table('visits')
+            ->when($pageId, fn ($q) => $q->where('landing_page_id', $pageId))
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to->copy()->endOfDay()))
+            ->count();
+    }
+
+    private function rangeOrders(?Carbon $from, ?Carbon $to, ?int $pageId = null): int
+    {
+        if (! Schema::hasTable('orders')) {
+            return 0;
+        }
+
+        return DB::table('orders')
+            ->when($pageId, fn ($q) => $q->where('landing_page_id', $pageId))
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to->copy()->endOfDay()))
+            ->count();
+    }
+
+    private function rangeRevenue(?Carbon $from, ?Carbon $to, ?int $pageId = null): float
+    {
+        if (! Schema::hasTable('orders')) {
+            return 0.0;
+        }
+
+        return (float) DB::table('orders')
+            ->when($pageId, fn ($q) => $q->where('landing_page_id', $pageId))
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to->copy()->endOfDay()))
+            ->whereNotIn('status', [OrderStatus::Cancelled->value, OrderStatus::Returned->value])
+            ->sum('total');
+    }
+
+    private function rangeAov(?Carbon $from, ?Carbon $to, ?int $pageId = null): float
+    {
+        $revenue = $this->rangeRevenue($from, $to, $pageId);
+
+        if (! Schema::hasTable('orders')) {
+            return 0.0;
+        }
+
+        $count = DB::table('orders')
+            ->when($pageId, fn ($q) => $q->where('landing_page_id', $pageId))
+            ->when($from, fn ($q) => $q->where('created_at', '>=', $from))
+            ->when($to, fn ($q) => $q->where('created_at', '<=', $to->copy()->endOfDay()))
+            ->whereNotIn('status', [OrderStatus::Cancelled->value, OrderStatus::Returned->value])
+            ->count();
+
+        return $count > 0 ? round($revenue / $count, 2) : 0.0;
+    }
+
+    private function ratio(int $numerator, int $denominator): float
+    {
+        return $denominator > 0 ? round(($numerator / $denominator) * 100, 1) : 0.0;
+    }
 }

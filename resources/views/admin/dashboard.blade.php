@@ -13,6 +13,13 @@
         <x-stat-card label="متوسط الطلب" :value="money($summary['aov'], $c)" tone="plain" />
     </div>
 
+    @if (Route::has('admin.analytics.index') && auth()->user()->can(\App\Enums\Permission::ViewAnalytics->value))
+        <a href="{{ route('admin.analytics.index') }}" class="mt-3 flex items-center justify-between rounded-card bg-slate-900 px-4 py-3 text-white">
+            <span class="text-sm font-bold">📊 التحليلات الكاملة (مع فلتر التاريخ)</span>
+            <span>←</span>
+        </a>
+    @endif
+
     {{-- Recent orders --}}
     <div class="mt-6">
         <div class="mb-2 flex items-center justify-between">
