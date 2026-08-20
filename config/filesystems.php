@@ -41,7 +41,8 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            // Relative so published snapshots stay host/domain independent.
+            'url' => '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

@@ -26,7 +26,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ $seo['og_title'] ?: $seo['title'] }}">
     @if ($seo['og_description'])<meta property="og:description" content="{{ $seo['og_description'] }}">@endif
-    @if ($seo['og_image'])<meta property="og:image" content="{{ $seo['og_image'] }}">@endif
+    @if ($seo['og_image'])<meta property="og:image" content="{{ \Illuminate\Support\Str::startsWith($seo['og_image'], 'http') ? $seo['og_image'] : url($seo['og_image']) }}">@endif
     <meta name="theme-color" content="#0b1020">
     @if ($preview ?? false)<meta name="robots" content="noindex">@endif
     @stack('head')
