@@ -74,6 +74,7 @@ class PageSnapshotService
                     ->all(),
             ],
             'currency' => $currency,
+            'options' => $this->normaliseOptions($page->options),
             'sections' => $page->sections
                 ->where('is_enabled', true)
                 ->sortBy('position')
@@ -134,5 +135,30 @@ class PageSnapshotService
             'second' => $section->type instanceof SectionType ? $section->type->second() : 0,
             'settings' => $settings,
         ];
+    }
+
+    /**
+     * Normalise the product variant groups to a clean, self-contained shape:
+     * [{ name: string, choices: string[] }].
+     *
+     * @param  array<int, mixed>|null  $options
+     * @return array<int, array{name: string, choices: array<int, string>}>
+     */
+    private function normaliseOptions(?array $options): array
+    {
+        return collect($options ?? [])
+            ->map(function ($group) {
+                $name = trim((string) ($group['name'] ?? ''));
+                $choices = collect($group['choices'] ?? [])
+                    ->map(fn ($c) => trim((string) $c))
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                return ['name' => $name, 'choices' => $choices];
+            })
+            ->filter(fn ($g) => $g['name'] !== '' && count($g['choices']) > 0)
+            ->values()
+            ->all();
     }
 }

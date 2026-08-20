@@ -36,9 +36,46 @@ class StoreOrderRequest extends FormRequest
             'address' => ['required', 'string', 'min:3', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
 
+            // Per-unit variant selections (validated against the snapshot below).
+            'options' => ['nullable', 'array'],
+
             // Any monetary field a tampering client might send is ignored;
             // we never read total/price/subtotal from the request.
         ];
+    }
+
+    /**
+     * Validate that a valid variant is chosen for every unit, for every
+     * variant group defined on the published page.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $page = $this->route('page') ?? $this->attributes->get('landing_page');
+            $snapshot = $page?->published_snapshot ?? [];
+
+            $groups = collect($snapshot['options'] ?? [])
+                ->filter(fn ($g) => ! empty($g['name']) && ! empty($g['choices']));
+            if ($groups->isEmpty()) {
+                return; // page has no variants
+            }
+
+            $offer = collect($snapshot['offers'] ?? [])->firstWhere('id', (int) $this->input('offer_id'));
+            $qty = max(1, (int) ($offer['quantity'] ?? 1));
+
+            $selected = $this->input('options', []);
+            $selected = is_array($selected) ? $selected : [];
+
+            for ($i = 0; $i < $qty; $i++) {
+                foreach ($groups as $group) {
+                    $name = $group['name'];
+                    $choice = $selected[$i][$name] ?? null;
+                    if (! in_array($choice, $group['choices'], true)) {
+                        $validator->errors()->add("options.$i.$name", 'אנא בחר/י '.$name.' לפריט '.($i + 1).'.');
+                    }
+                }
+            }
+        });
     }
 
     public function messages(): array

@@ -117,6 +117,6 @@ class LandingPageTest extends TestCase
 
         $this->actingAs($staff)->get(route('admin.pages.preview', $page))
             ->assertOk()
-            ->assertSee('45');
+            ->assertSee('הזמן עכשיו'); // Hebrew public CTA
     }
 }

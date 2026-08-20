@@ -28,6 +28,7 @@ class PublicOrderController extends Controller
             page: $page,
             offer: $offer,
             customer: $request->only(['full_name', 'phone', 'city', 'area', 'address', 'notes']),
+            options: $this->cleanOptions($page, $offer, (array) $request->input('options', [])),
             meta: [
                 'user_agent' => substr((string) $request->userAgent(), 0, 255),
                 'ip_address' => $request->ip(),
@@ -40,6 +41,38 @@ class PublicOrderController extends Controller
         return redirect()
             ->route('public.thankyou', ['page' => $page->slug])
             ->with('order_id', $order->id);
+    }
+
+    /**
+     * Keep only defined variant groups/choices, one clean block per unit.
+     *
+     * @param  array<int, mixed>  $submitted
+     * @return array<int, array<string, string>>
+     */
+    private function cleanOptions(LandingPage $page, Offer $offer, array $submitted): array
+    {
+        $groups = collect($page->published_snapshot['options'] ?? [])
+            ->filter(fn ($g) => ! empty($g['name']) && ! empty($g['choices']));
+        if ($groups->isEmpty()) {
+            return [];
+        }
+
+        $units = max(1, (int) $offer->quantity);
+        $clean = [];
+
+        for ($i = 0; $i < $units; $i++) {
+            $unit = [];
+            foreach ($groups as $group) {
+                $name = $group['name'];
+                $choice = $submitted[$i][$name] ?? null;
+                if (in_array($choice, $group['choices'], true)) {
+                    $unit[$name] = $choice;
+                }
+            }
+            $clean[] = $unit;
+        }
+
+        return $clean;
     }
 
     public function thankyou(Request $request, LandingPage $page): View|RedirectResponse

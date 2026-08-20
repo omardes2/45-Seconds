@@ -87,9 +87,13 @@ class LandingPageController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
             'og_title' => ['nullable', 'string', 'max:255'],
             'og_description' => ['nullable', 'string', 'max:500'],
+            'options' => ['nullable', 'array', 'max:10'],
+            'options.*.name' => ['nullable', 'string', 'max:80'],
+            'options.*.choices' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $page->fill($data);
+        $page->options = $this->parseOptions($request->input('options', []));
         $page->updated_by = $request->user()->id;
         $page->save();
 
@@ -143,5 +147,30 @@ class LandingPageController extends Controller
         $this->audit->log(AuditAction::Deleted, $page, ['name' => $name]);
 
         return redirect()->route('admin.pages.index')->with('success', 'تم حذف الصفحة.');
+    }
+
+    /**
+     * Convert the admin variant groups (each with a name and a newline/comma
+     * separated choices string) into a normalised structure.
+     *
+     * @param  array<int, array<string, mixed>>  $groups
+     * @return array<int, array{name: string, choices: array<int, string>}>
+     */
+    private function parseOptions(array $groups): array
+    {
+        return collect($groups)
+            ->map(function ($group) {
+                $name = trim((string) ($group['name'] ?? ''));
+                $choices = collect(preg_split('/[\n,،]+/u', (string) ($group['choices'] ?? '')))
+                    ->map(fn ($c) => trim((string) $c))
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                return ['name' => $name, 'choices' => $choices];
+            })
+            ->filter(fn ($g) => $g['name'] !== '' && count($g['choices']) > 0)
+            ->values()
+            ->all();
     }
 }

@@ -58,6 +58,9 @@ class DemoLandingPageSeeder extends Seeder
             'meta_description' => 'ضوء ليلي ذكي يساعدك على النوم بسرعة. الدفع عند الاستلام وتوصيل سريع.',
             'og_title' => 'ضوء النوم',
             'og_description' => 'نم بسرعة مع إضاءة تحاكي غروب الشمس.',
+            'options' => [
+                ['name' => 'צבע', 'choices' => ['לבן', 'שחור', 'זהב']],
+            ],
         ]);
 
         $this->fillSections($page, compact('mainImage', 'problemImg', 'beforeImg', 'afterImg'));

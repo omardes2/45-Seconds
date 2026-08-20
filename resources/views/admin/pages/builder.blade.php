@@ -1,3 +1,11 @@
+@php
+    $optionGroups = collect($page->options ?? [])
+        ->map(fn ($g) => [
+            'name' => $g['name'] ?? '',
+            'choices' => is_array($g['choices'] ?? null) ? implode("\n", $g['choices']) : (string) ($g['choices'] ?? ''),
+        ])
+        ->values();
+@endphp
 <x-layouts.admin :title="$page->name" heading="محرر الصفحة">
     <x-slot:actions>
         <a href="{{ route('admin.pages.preview', $page) }}" target="_blank"
@@ -86,6 +94,32 @@
                             <input name="og_title" value="{{ $page->og_title }}" class="field-input"></div>
                         <div><label class="field-label">وصف OpenGraph</label>
                             <textarea name="og_description" rows="2" class="field-input">{{ $page->og_description }}</textarea></div>
+
+                        {{-- Product variants (colours / sizes / …) --}}
+                        <div class="rounded-xl bg-slate-50 p-3" x-data="{
+                                groups: {{ \Illuminate\Support\Js::from($optionGroups) }},
+                                add() { if (this.groups.length < 10) this.groups.push({name:'', choices:''}) },
+                                remove(i) { this.groups.splice(i, 1) },
+                             }">
+                            <div class="mb-1 flex items-center justify-between">
+                                <label class="field-label !mb-0">متغيرات المنتج (ألوان / مقاسات)</label>
+                                <button type="button" @click="add()" x-show="groups.length < 10"
+                                        class="rounded-lg bg-brand-50 px-2 py-1 text-xs font-bold text-brand-600">＋ مجموعة</button>
+                            </div>
+                            <p class="mb-2 text-[11px] text-slate-400">يختار الزبون قيمة لكل قطعة عند الطلب. اكتب كل خيار في سطر (أو افصل بفواصل). الاسم والقيم بالعبرية كما تظهر للزبون.</p>
+                            <template x-for="(g, i) in groups" :key="i">
+                                <div class="mb-2 rounded-xl bg-white p-2 ring-1 ring-slate-100">
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" :name="`options[${i}][name]`" x-model="g.name"
+                                               placeholder="اسم المجموعة (مثال: צבע)" class="field-input flex-1">
+                                        <button type="button" @click="remove(i)" class="grid h-9 w-9 flex-none place-items-center rounded-xl bg-rose-50 text-rose-500">✕</button>
+                                    </div>
+                                    <textarea :name="`options[${i}][choices]`" x-model="g.choices" rows="3"
+                                              placeholder="אדום&#10;כחול&#10;שחור" class="field-input mt-2"></textarea>
+                                </div>
+                            </template>
+                        </div>
+
                         <div class="text-left"><span data-save-status class="text-[11px] text-slate-400"></span></div>
                     </form>
                 </div>

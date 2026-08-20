@@ -13,6 +13,7 @@
         'name' => $o['name'],
     ]);
     $sections = collect($data['sections']);
+    $productOptions = $data['options'] ?? [];
     $orderAction = \Illuminate\Support\Facades\Route::has('public.order.store')
         ? route('public.order.store', $data['page']['slug']) : '#';
 @endphp
@@ -42,28 +43,38 @@
         selected: @js($defaultId),
         checkoutOpen: false,
         submitting: false,
-        progress: 0,
         preview: @js($preview ?? false),
         symbol: @js($symbol),
+        optionGroups: @js(collect($productOptions)->map(fn ($g) => ['name' => $g['name'], 'choices' => $g['choices']])->values()),
+        unitSel: [],
         get current() { return this.offers[this.selected] || Object.values(this.offers)[0] || {price:0, qty:1, name:''} },
+        get units() { return Math.max(1, parseInt(this.current.qty) || 1) },
         priceText() { return this.symbol + ' ' + Number(this.current.price).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) },
-        select(id) { this.selected = id; window.dispatchEvent(new CustomEvent('fs:offer-selected', {detail:{offer_id:id}})); },
-        openCheckout() { this.checkoutOpen = true; window.dispatchEvent(new CustomEvent('fs:checkout-opened')); },
+        syncUnits() {
+            if (!this.optionGroups.length) return;
+            const n = this.units;
+            while (this.unitSel.length < n) this.unitSel.push({});
+            this.unitSel.length = n;
+        },
+        firstMissing() {
+            if (!this.optionGroups.length) return null;
+            this.syncUnits();
+            for (let i = 0; i < this.units; i++)
+                for (const g of this.optionGroups)
+                    if (!this.unitSel[i] || !this.unitSel[i][g.name]) return { unit: i + 1, name: g.name };
+            return null;
+        },
+        select(id) { this.selected = id; this.syncUnits(); window.dispatchEvent(new CustomEvent('fs:offer-selected', {detail:{offer_id:id}})); },
+        openCheckout() { this.syncUnits(); this.checkoutOpen = true; window.dispatchEvent(new CustomEvent('fs:checkout-opened')); },
         closeCheckout() { this.checkoutOpen = false; },
-        onScroll() { const h = document.body.scrollHeight - window.innerHeight; this.progress = h > 0 ? Math.min(45, Math.round((window.scrollY / h) * 45)) : 0; },
-        onSubmit(e) { if (this.preview) { e.preventDefault(); alert('هذه معاينة — لن يتم إنشاء طلب.'); return; } this.submitting = true; },
+        onSubmit(e) {
+            const m = this.firstMissing();
+            if (m) { e.preventDefault(); alert('אנא בחר/י ' + m.name + ' לפריט ' + m.unit); return; }
+            if (this.preview) { e.preventDefault(); alert('זוהי תצוגה מקדימה — לא תיווצר הזמנה.'); return; }
+            this.submitting = true;
+        },
      }"
-     x-init="onScroll()" @scroll.window.passive="onScroll()">
-
-    {{-- Scroll progress 0 → 45 --}}
-    <div class="safe-top pointer-events-none sticky top-0 z-40">
-        <div class="flex items-center gap-2 bg-white/80 px-4 py-1.5 backdrop-blur">
-            <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
-                <div class="h-full rounded-full bg-brand-600 transition-all duration-200" :style="`width: ${(progress/45)*100}%`"></div>
-            </div>
-            <span class="text-[11px] font-black tabular-nums text-slate-500"><span x-text="progress"></span>/45 ث</span>
-        </div>
-    </div>
+     x-init="syncUnits()">
 
     @if ($preview ?? false)
         <div class="bg-amber-400 px-4 py-1.5 text-center text-[11px] font-bold text-amber-950">وضع المعاينة — بيانات المسودة</div>
@@ -102,7 +113,7 @@
                             @endif
                         </div>
                     @endif
-                    <button @click="openCheckout()" class="btn-cta mt-5 w-full">{{ $s['cta_text'] ?? 'اطلب الآن' }}</button>
+                    <button @click="openCheckout()" class="btn-cta mt-5 w-full">{{ $s['cta_text'] ?? 'הזמן עכשיו' }}</button>
                     @if (!empty($s['delivery_text']))<p class="mt-2 text-sm font-semibold text-emerald-600">✓ {{ $s['delivery_text'] }}</p>@endif
                 </section>
                 @break
@@ -280,14 +291,14 @@
     <div class="h-24"></div>
 
     {{-- Sticky CTA --}}
-    <div class="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t border-slate-200 bg-white/95 px-4 pt-3 backdrop-blur"
+    <div class="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[480px] border-t border-slate-200 bg-white/95 px-4 pb-2 pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] backdrop-blur"
          x-show="!checkoutOpen" x-transition.opacity>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-4">
             <div class="flex-none">
-                <div class="text-[11px] text-slate-400">الإجمالي</div>
-                <div class="text-xl font-black text-slate-900" x-text="priceText()"></div>
+                <div class="text-xs font-semibold text-slate-500">סה"כ</div>
+                <div class="text-2xl font-black leading-tight text-slate-900" x-text="priceText()"></div>
             </div>
-            <button @click="openCheckout()" class="btn-cta flex-1">اطلب الآن</button>
+            <button @click="openCheckout()" class="btn-cta flex-1 !py-4 text-lg">הזמן עכשיו 🛒</button>
         </div>
     </div>
 
@@ -298,60 +309,90 @@
              x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0">
             <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200"></div>
             <div class="mb-4 flex items-center justify-between">
-                <h3 class="text-lg font-black text-slate-900">إتمام الطلب</h3>
+                <h3 class="text-lg font-black text-slate-900">השלמת הזמנה</h3>
                 <button @click="closeCheckout()" class="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-500">✕</button>
             </div>
 
             {{-- order summary --}}
             <div class="mb-4 rounded-2xl bg-slate-50 p-4">
-                <div class="flex items-center justify-between text-sm">
-                    <span class="text-slate-500">العرض</span>
-                    <span class="font-bold text-slate-900" x-text="current.name"></span>
+                <div class="flex items-center justify-between gap-3 text-sm">
+                    <span class="flex-none text-slate-500">חבילה</span>
+                    <span class="min-w-0 truncate text-left font-bold text-slate-900" x-text="current.name"></span>
                 </div>
-                <div class="mt-1 flex items-center justify-between">
-                    <span class="text-slate-500">الإجمالي (الدفع عند الاستلام)</span>
-                    <span class="text-xl font-black text-brand-600" x-text="priceText()"></span>
+                <div class="mt-1 flex items-end justify-between gap-3 border-t border-slate-200 pt-2">
+                    <div class="flex-none">
+                        <div class="font-bold text-slate-700">סה"כ</div>
+                        <div class="text-[11px] text-slate-400">תשלום במזומן במסירה</div>
+                    </div>
+                    <span class="whitespace-nowrap text-2xl font-black text-brand-600" x-text="priceText()"></span>
                 </div>
             </div>
 
             <form method="POST" action="{{ $orderAction }}" @submit="onSubmit($event)" class="space-y-3">
                 @csrf
                 <input type="hidden" name="offer_id" :value="selected">
+
+                {{-- Per-unit variant selection (colours / sizes / …) --}}
+                <template x-if="optionGroups.length">
+                    <div class="space-y-3 rounded-2xl border border-slate-200 p-3">
+                        <div class="text-sm font-bold text-slate-700">בחירת אפשרויות</div>
+                        <template x-for="(u, i) in unitSel" :key="i">
+                            <div class="rounded-xl bg-slate-50 p-3">
+                                <div class="mb-2 text-xs font-bold text-slate-500" x-show="units > 1" x-text="'פריט ' + (i + 1)"></div>
+                                <div class="space-y-2">
+                                    <template x-for="g in optionGroups" :key="g.name">
+                                        <div>
+                                            <label class="mb-1 block text-xs font-semibold text-slate-600" x-text="g.name"></label>
+                                            <select :name="`options[${i}][${g.name}]`" x-model="unitSel[i][g.name]"
+                                                    class="w-full appearance-none rounded-xl border-2 border-slate-200 bg-white px-3 py-2.5 text-base font-semibold text-slate-900 focus:border-brand-500 focus:outline-none">
+                                                <option value="" disabled selected x-text="'בחר/י ' + g.name"></option>
+                                                <template x-for="c in g.choices" :key="c">
+                                                    <option :value="c" x-text="c"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
                 <div>
-                    <label class="field-label">الاسم الكامل</label>
+                    <label class="field-label">שם מלא</label>
                     <input name="full_name" value="{{ old('full_name') }}" class="field-input" required autocomplete="name">
                     @error('full_name') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="field-label">رقم الهاتف</label>
+                    <label class="field-label">מספר טלפון</label>
                     <input name="phone" type="tel" dir="ltr" value="{{ old('phone') }}" class="field-input" required autocomplete="tel" inputmode="tel">
                     @error('phone') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="field-label">المدينة</label>
+                        <label class="field-label">עיר</label>
                         <input name="city" value="{{ old('city') }}" class="field-input" required>
                         @error('city') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label class="field-label">المنطقة</label>
+                        <label class="field-label">אזור</label>
                         <input name="area" value="{{ old('area') }}" class="field-input">
                     </div>
                 </div>
                 <div>
-                    <label class="field-label">العنوان</label>
+                    <label class="field-label">כתובת</label>
                     <input name="address" value="{{ old('address') }}" class="field-input" required autocomplete="street-address">
                     @error('address') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="field-label">ملاحظات (اختياري)</label>
+                    <label class="field-label">הערות (אופציונלי)</label>
                     <textarea name="notes" rows="2" class="field-input">{{ old('notes') }}</textarea>
                 </div>
                 <button type="submit" class="btn-cta w-full" :disabled="submitting">
-                    <span x-show="!submitting">تأكيد الطلب — <span x-text="priceText()"></span></span>
-                    <span x-show="submitting">جارٍ الإرسال...</span>
+                    <span x-show="!submitting">אישור הזמנה — <span x-text="priceText()"></span></span>
+                    <span x-show="submitting">שולח…</span>
                 </button>
-                <p class="text-center text-[11px] text-slate-400">بتأكيد الطلب أنت توافق على التواصل معك لتأكيده.</p>
+                <p class="text-center text-[11px] text-slate-400">באישור ההזמנה את/ה מסכים/ה שניצור קשר לאישורה.</p>
             </form>
         </div>
     </div>

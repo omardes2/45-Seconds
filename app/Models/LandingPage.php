@@ -27,6 +27,7 @@ class LandingPage extends Model
         'og_image',
         'published_at',
         'settings',
+        'options',
         'published_snapshot',
         'created_by',
         'updated_by',
@@ -38,6 +39,7 @@ class LandingPage extends Model
             'status' => PageStatus::class,
             'published_at' => 'datetime',
             'settings' => 'array',
+            'options' => 'array',
             'published_snapshot' => 'array',
         ];
     }

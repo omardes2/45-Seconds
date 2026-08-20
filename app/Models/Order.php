@@ -28,6 +28,7 @@ class Order extends Model
         'area',
         'address',
         'notes',
+        'options',
         'quantity',
         'unit_price',
         'subtotal',
@@ -45,6 +46,7 @@ class Order extends Model
     {
         return [
             'quantity' => 'integer',
+            'options' => 'array',
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',
             'total' => 'decimal:2',

@@ -27,7 +27,7 @@ class OrderService
      * @param  array<string, mixed>  $meta  visitor_id, session_id, user_agent, ip_address
      * @param  array<string, mixed>  $attribution  UTM / click ids / referrer snapshot
      */
-    public function create(LandingPage $page, Offer $offer, array $customer, array $meta = [], array $attribution = []): Order
+    public function create(LandingPage $page, Offer $offer, array $customer, array $options = [], array $meta = [], array $attribution = []): Order
     {
         // Defensive re-check: the offer must belong to this page and be active.
         if ($offer->landing_page_id !== $page->id || ! $offer->is_active) {
@@ -42,7 +42,7 @@ class OrderService
         $total = round((float) $offer->price, 2);
         $unitPrice = round($total / $quantity, 2);
 
-        $order = DB::transaction(function () use ($page, $offer, $customer, $meta, $attribution, $currency, $quantity, $unitPrice, $total) {
+        $order = DB::transaction(function () use ($page, $offer, $customer, $options, $meta, $attribution, $currency, $quantity, $unitPrice, $total) {
             $order = Order::create([
                 'order_number' => 'PENDING', // replaced below using the id
                 'landing_page_id' => $page->id,
@@ -54,6 +54,7 @@ class OrderService
                 'area' => $customer['area'] ?? null,
                 'address' => $customer['address'],
                 'notes' => $customer['notes'] ?? null,
+                'options' => $options ?: null,
                 'quantity' => $quantity,
                 'unit_price' => $unitPrice,
                 'subtotal' => $total,
