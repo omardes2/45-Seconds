@@ -3,6 +3,7 @@
 use App\Enums\Permission;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TrackingController;
 use App\Http\Controllers\Admin\UserController;
@@ -57,6 +58,13 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::middleware('can:'.Permission::ManageTracking->value)->group(function () {
         Route::get('tracking', [TrackingController::class, 'edit'])->name('tracking.edit');
         Route::put('tracking', [TrackingController::class, 'update'])->name('tracking.update');
+    });
+
+    // Products
+    Route::middleware('can:'.Permission::ManageProducts->value)->group(function () {
+        Route::resource('products', ProductController::class)->except('show');
+        Route::delete('products/{product}/media/{media}', [ProductController::class, 'destroyMedia'])
+            ->name('products.media.destroy');
     });
 
     // Audit log
